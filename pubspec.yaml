@@ -35,12 +35,12 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
 
-  # Firebase — uncomment when you set up your Firebase project
-  # firebase_core: ^2.30.0
-  # firebase_auth: ^4.19.0
-  # cloud_firestore: ^4.17.0
-  # firebase_storage: ^11.7.0
-  # firebase_messaging: ^14.9.0
+#   Firebase — uncomment when you set up your Firebase project
+  firebase_core: ^2.30.0
+  firebase_auth: ^4.19.0
+  cloud_firestore: ^4.17.0
+  firebase_storage: ^11.7.0
+  firebase_messaging: ^14.9.0
 
   # Image picking for "Post a Fit"
   image_picker: ^1.1.2
@@ -92,14 +92,14 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  fonts:
-     - family: Syne
-       fonts:
-         - asset: assets/fonts/Syne-Regular.ttf
-         - asset: assets/fonts/Syne-Bold.ttf
-           weight: 700
-         - asset: assets/fonts/Syne-ExtraBold.ttf
-           weight: 800
+#  fonts:
+#     - family: Syne
+#       fonts:
+#         - asset: assets/fonts/Syne-Regular.ttf
+#         - asset: assets/fonts/Syne-Bold.ttf
+#           weight: 700
+#         - asset: assets/fonts/Syne-ExtraBold.ttf
+#           weight: 800
 #           style: italic
   #   - family: Trajan Pro
   #     fonts:

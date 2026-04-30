@@ -1,8 +1,22 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'firebase_options.dart';
 import 'theme/app_theme.dart';
 import 'screens/shell_screen.dart';
 
-void main() {
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  try {
+    final userCredential = await FirebaseAuth.instance.signInAnonymously();
+    print('✅ Firebase connected! UID: ${userCredential.user?.uid}');
+  } catch (e) {
+    print('❌ Firebase error: $e');
+  }
   runApp(const RateMyFitApp());
 }
 

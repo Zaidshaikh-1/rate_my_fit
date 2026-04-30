@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppColors {
   // Core palette — dark streetwear aesthetic
@@ -33,7 +34,6 @@ class AppTheme {
         onPrimary: AppColors.background,
         onSurface: AppColors.textPrimary,
       ),
-      fontFamily: 'Syne',
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.background,
         elevation: 0,
@@ -56,39 +56,7 @@ class AppTheme {
         type: BottomNavigationBarType.fixed,
         elevation: 0,
       ),
-      textTheme: const TextTheme(
-        displayLarge: TextStyle(
-          fontFamily: 'Syne',
-          fontSize: 48,
-          fontWeight: FontWeight.w800,
-          color: AppColors.textPrimary,
-          letterSpacing: -2,
-        ),
-        headlineMedium: TextStyle(
-          fontFamily: 'Syne',
-          fontSize: 24,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
-          letterSpacing: -0.8,
-        ),
-        titleMedium: TextStyle(
-          fontFamily: 'Syne',
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
-        ),
-        bodyMedium: TextStyle(
-          fontSize: 14,
-          color: AppColors.textSecondary,
-          height: 1.5,
-        ),
-        labelSmall: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textMuted,
-          letterSpacing: 1.5,
-        ),
-      ),
+      textTheme: GoogleFonts.syneTextTheme(ThemeData.dark().textTheme),
     );
   }
 }

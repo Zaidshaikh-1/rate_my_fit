@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "864431249813",
+    "project_id": "rate-my-fit-45017",
+    "storage_bucket": "rate-my-fit-45017.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:864431249813:android:9132ed7b0967bb540c3e9c",
+        "android_client_info": {
+          "package_name": "com.example.rate_my_fit"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB44LeWL6gIg0-PZc9BJPPyIoTiVj6vivY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
