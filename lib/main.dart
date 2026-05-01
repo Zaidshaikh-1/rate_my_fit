@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'firebase_options.dart';
@@ -11,12 +10,12 @@ void main() async{
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  try {
-    final userCredential = await FirebaseAuth.instance.signInAnonymously();
-    print('✅ Firebase connected! UID: ${userCredential.user?.uid}');
-  } catch (e) {
-    print('❌ Firebase error: $e');
-  }
+  // try {
+  //   final userCredential = await FirebaseAuth.instance.signInAnonymously();
+  //   print('✅ Firebase connected! UID: ${userCredential.user?.uid}');
+  // } catch (e) {
+  //   print('❌ Firebase error: $e');
+  // }
   runApp(const RateMyFitApp());
 }
 
