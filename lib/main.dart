@@ -1,8 +1,10 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:rate_my_fit/screens/login_screen.dart';
 import 'firebase_options.dart';
 import 'theme/app_theme.dart';
 import 'screens/shell_screen.dart';
+import 'screens/login_screen.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +30,7 @@ class RateMyFitApp extends StatelessWidget {
       title: 'Rate My Fit',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
-      home: const ShellScreen(),
+      home: const LoginScreen(),
     );
   }
 }
