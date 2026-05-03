@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '';
+import '../theme/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -34,6 +35,37 @@ class _LoginScreenState extends State<LoginScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // TODO: app name or logo
+            Container(
+              child: RichText(
+                text: const TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'rate',
+                      style: TextStyle(
+                        fontFamily: 'Syne',
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    TextSpan(
+                      text: 'myfit',
+                      style: TextStyle(
+                        fontFamily: 'Syne',
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 48,),
+
+            const Text('Sign In using your Google Account',
+
+            ),
 
             const SizedBox(height: 48),
 
