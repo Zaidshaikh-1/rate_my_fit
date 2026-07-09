@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:rate_my_fit/screens/shell_screen.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../theme/app_theme.dart';
+import 'package:flutter/foundation.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -151,6 +152,21 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
+            if (kDebugMode) ...[
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ShellScreen()),
+                  );
+                },
+                child: const Text(
+                  '⚡ Dev Skip (debug only)',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+            ],
           ],
         ),
       ),

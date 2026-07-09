@@ -5,12 +5,17 @@ import 'firebase_options.dart';
 import 'theme/app_theme.dart';
 import 'screens/shell_screen.dart';
 import 'screens/login_screen.dart';
+import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  if (kDebugMode) {
+    await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
+  }
 
   // try {
   //   final userCredential = await FirebaseAuth.instance.signInAnonymously();
