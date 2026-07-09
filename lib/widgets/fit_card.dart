@@ -22,10 +22,10 @@ class FitCard extends StatelessWidget {
   });
 
   String get _scoreLabel {
-    if (avgScore >= 85) return '🔥 Drip';
-    if (avgScore >= 65) return '😎 Clean';
-    if (avgScore >= 30) return '😐 Mid';
-    return '💀 Not it';
+    if (avgScore >= 85) return 'Drip';
+    if (avgScore >= 65) return 'Clean';
+    if (avgScore >= 30) return 'Mid';
+    return 'Not it';
   }
 
   Color get _scoreColor {

@@ -13,9 +13,9 @@ void main() async{
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  if (kDebugMode) {
-    await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
-  }
+  // if (kDebugMode) {
+  //   await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
+  // }
 
   // try {
   //   final userCredential = await FirebaseAuth.instance.signInAnonymously();

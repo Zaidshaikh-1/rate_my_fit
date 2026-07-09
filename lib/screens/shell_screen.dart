@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 import 'home_screen.dart';
+import 'post_screen.dart';
 
 // Placeholder screens for Phase 2+ tabs
 class _PlaceholderScreen extends StatelessWidget {
@@ -45,7 +46,7 @@ class _ShellScreenState extends State<ShellScreen> {
   final _screens = const [
     HomeScreen(),
     _PlaceholderScreen(label: 'Leaderboard'),
-    _PlaceholderScreen(label: 'Post a Fit'),
+    PostScreen(),
     _PlaceholderScreen(label: 'Profile'),
   ];
 

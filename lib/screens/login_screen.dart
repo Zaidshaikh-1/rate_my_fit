@@ -128,7 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   _isLoading ? null : _handleGoogleSignIn();
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6C63FF),
+                  backgroundColor: AppColors.primary,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -148,7 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 :const Text(
                   'Sign Up',
-                  style: TextStyle(color: Colors.white, fontSize: 15),
+                  style: TextStyle(color: Colors.black, fontSize: 15),
                 ),
               ),
             ),
@@ -162,8 +162,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   );
                 },
                 child: const Text(
-                  '⚡ Dev Skip (debug only)',
-                  style: TextStyle(color: Colors.grey),
+                  'Dev Skip (debug only)',
+                  style: TextStyle(color: Colors.white),
                 ),
               ),
             ],
