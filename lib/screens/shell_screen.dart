@@ -46,7 +46,7 @@ class _ShellScreenState extends State<ShellScreen> {
   final _screens = const [
     HomeScreen(),
     _PlaceholderScreen(label: 'Leaderboard'),
-    PostScreen(),
+    SizedBox.shrink(),
     _PlaceholderScreen(label: 'Profile'),
   ];
 
@@ -65,7 +65,16 @@ class _ShellScreenState extends State<ShellScreen> {
           ),
           child: BottomNavigationBar(
             currentIndex: _currentIndex,
-            onTap: (i) => setState(() => _currentIndex = i),
+            onTap: (i) {
+              if (i == 2) {
+                Navigator.push(
+                  context,
+                    MaterialPageRoute(builder: (_) => const PostScreen()),
+                );
+              } else {
+                setState(() => _currentIndex = i);
+              }
+            },
             items: const [
               BottomNavigationBarItem(
                 icon: Icon(Icons.grid_view_rounded),
