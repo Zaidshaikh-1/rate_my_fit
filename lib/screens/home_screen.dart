@@ -1,55 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/fit_card.dart';
 import '../widgets/vibe_card_button.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-
-// Placeholder fit model — swap with Firestore model later
-class _FitPost {
-  final String id;
-  final String username;
-  final String timeAgo;
-  final List<String> tags;
-  final double avgScore;
-  final int ratingCount;
-
-  const _FitPost({
-    required this.id,
-    required this.username,
-    required this.timeAgo,
-    required this.tags,
-    required this.avgScore,
-    required this.ratingCount,
-  });
-}
-
-// Sample data — replace with Firestore stream
-final _sampleFits = [
-  _FitPost(
-    id: '1',
-    username: '@zaidxo',
-    timeAgo: '2h ago',
-    tags: ['streetwear', 'grunge', 'oversized'],
-    avgScore: 91,
-    ratingCount: 34,
-  ),
-  _FitPost(
-    id: '2',
-    username: '@mia.fits',
-    timeAgo: '4h ago',
-    tags: ['y2k', 'denim', 'vintage'],
-    avgScore: 74,
-    ratingCount: 21,
-  ),
-  _FitPost(
-    id: '3',
-    username: '@kaito.drip',
-    timeAgo: '6h ago',
-    tags: ['minimal', 'monochrome'],
-    avgScore: 52,
-    ratingCount: 18,
-  ),
-];
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -59,27 +13,61 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // tracks which vibe the user picked per post id
-  final Map<String, Vibe?> _selectedVibes = {};
   String _timeAgo(Timestamp? timestamp) {
-    if (timestamp == null) return 'Just now';
+    if (timestamp == null) return 'just now';
     final diff = DateTime.now().difference(timestamp.toDate());
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inHours < 1) return '${diff.inMinutes}m ago';
-    if (diff.inDays < 1) return '${diff.inHours}h ago';
+    if (diff.inMinutes < 1) return 'just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
     return '${diff.inDays}d ago';
   }
 
+  Future<void> _rate(String postId, Vibe vibe) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
 
-  void _rate(String postId, Vibe vibe) {
-    setState(() {
-      _selectedVibes[postId] = vibe;
+    final vibeCard = vibeCards.firstWhere((c) => c.vibe == vibe);
+    final postRef = FirebaseFirestore.instance.collection('posts').doc(postId);
+    final ratingRef = postRef.collection('ratings').doc(user.uid);
+
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+      final ratingSnap = await transaction.get(ratingRef);
+      final postSnap = await transaction.get(postRef);
+      if (!postSnap.exists) return;
+
+      final postData = postSnap.data() as Map<String, dynamic>;
+      int ratingCount = (postData['ratingCount'] ?? 0) as int;
+      double totalScore = ((postData['totalScore'] ?? 0) as num).toDouble();
+
+      if (ratingSnap.exists) {
+        // user is changing their vote — swap old score for new
+        final oldScore = ((ratingSnap.data()?['score'] ?? 0) as num).toDouble();
+        totalScore = totalScore - oldScore + vibeCard.score;
+      } else {
+        ratingCount += 1;
+        totalScore += vibeCard.score;
+      }
+
+      final newAvg = ratingCount > 0 ? totalScore / ratingCount : 0.0;
+
+      transaction.set(ratingRef, {
+        'vibe': vibe.name,
+        'score': vibeCard.score,
+        'ratedAt': FieldValue.serverTimestamp(),
+      });
+
+      transaction.update(postRef, {
+        'ratingCount': ratingCount,
+        'totalScore': totalScore,
+        'avgScore': newAvg,
+      });
     });
-    // TODO: write to Firestore here
   }
 
   @override
   Widget build(BuildContext context) {
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
     return Scaffold(
       appBar: AppBar(
         title: RichText(
@@ -113,73 +101,86 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: StreamBuilder<QuerySnapshot>(
+      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance
             .collection('posts')
             .orderBy('createdAt', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
-
-          // Loading state
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-
-          // Empty state
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          final docs = snapshot.data?.docs ?? [];
+          if (docs.isEmpty) {
             return const Center(
               child: Text(
-                'No fits yet. Be the first!',
+                'No fits yet — be the first to post!',
                 style: TextStyle(color: AppColors.textMuted),
               ),
             );
           }
 
-          final posts = snapshot.data!.docs;
-
           return ListView.builder(
             padding: const EdgeInsets.only(top: 8, bottom: 100),
-            itemCount: posts.length,
+            itemCount: docs.length,
             itemBuilder: (context, index) {
-              final data = posts[index].data() as Map<String, dynamic>;
-              final postId = posts[index].id;
-              final selected = _selectedVibes[postId];
+              final doc = docs[index];
+              final data = doc.data();
 
-              return Column(
-                children: [
-                  FitCard(
-                    username: data['username'] ?? '@unknown',
-                    timeAgo: _timeAgo(data['createdAt']),
-                    tags: List<String>.from(data['tags'] ?? []),
-                    avgScore: (data['avgScore'] ?? 0).toDouble(),
-                    ratingCount: data['ratingCount'] ?? 0,
-                    imageUrl: data['imageUrl'],
-                  ),
+              return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                stream: currentUserId == null
+                    ? null
+                    : doc.reference
+                    .collection('ratings')
+                    .doc(currentUserId)
+                    .snapshots(),
+                builder: (context, ratingSnap) {
+                  final myVibeName =
+                  ratingSnap.data?.data()?['vibe'] as String?;
+                  final hasRated = myVibeName != null;
+                  final selected = hasRated
+                      ? Vibe.values.firstWhere((v) => v.name == myVibeName)
+                      : null;
 
-                  // Vibe card row
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: vibeCards.map((card) {
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: VibeCardButton(
-                              card: card,
-                              selected: selected == card.vibe,
-                              onTap: () => _rate(postId, card.vibe),
-                            ),
-                          );
-                        }).toList(),
+                  return Column(
+                    children: [
+                      FitCard(
+                        username: data['username'] ?? 'Anonymous',
+                        timeAgo: _timeAgo(data['createdAt'] as Timestamp?),
+                        tags: List<String>.from(data['tags'] ?? []),
+                        avgScore: ((data['avgScore'] ?? 0) as num).toDouble(),
+                        ratingCount: (data['ratingCount'] ?? 0) as int,
+                        imageUrl: data['imageUrl'] as String?,
                       ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 4),
-                  Divider(color: AppColors.border, height: 1, indent: 16, endIndent: 16),
-                  const SizedBox(height: 4),
-                ],
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: vibeCards.map((card) {
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: VibeCardButton(
+                                  card: card,
+                                  selected: selected == card.vibe,
+                                  onTap: () => _rate(doc.id, card.vibe),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Divider(
+                        color: AppColors.border,
+                        height: 1,
+                        indent: 16,
+                        endIndent: 16,
+                      ),
+                      const SizedBox(height: 4),
+                    ],
+                  );
+                },
               );
             },
           );

@@ -16,6 +16,7 @@ class PostScreen extends StatefulWidget {
 class _PostScreenState extends State<PostScreen> {
   File? _selectedImage;        // TODO: will hold the picked image
   bool _isUploading = false;   // TODO: will show loading state during upload
+  final TextEditingController _tagsController = TextEditingController();
 
   final ImagePicker _picker = ImagePicker();
 
@@ -46,10 +47,14 @@ class _PostScreenState extends State<PostScreen> {
       final imageUrl = await storageRef.getDownloadURL();
     // TODO: step 2 — write post document to Firestore
       await FirebaseFirestore.instance.collection('posts').add({
-      'uid': uid,
+      'userId': uid,
       'username': '@${FirebaseAuth.instance.currentUser?.displayName ?? 'devuser'}',
       'imageUrl': imageUrl,
-      'tags': [],           // TODO: add a tags input field later
+      'tags':  _tagsController.text
+          .split(',')
+          .map((t) => t.trim())
+          .where((t) => t.isNotEmpty)
+          .toList(),           // TODO: add a tags input field later
       'avgScore': 0.0,
       'ratingCount': 0,
       'createdAt': FieldValue.serverTimestamp(),
@@ -71,6 +76,12 @@ class _PostScreenState extends State<PostScreen> {
     } finally {
       if (mounted) setState(() => _isUploading = false);
     }
+  }
+
+  @override
+  void dispose() {
+    _tagsController.dispose();
+    super.dispose();
   }
 
   @override
@@ -108,6 +119,25 @@ class _PostScreenState extends State<PostScreen> {
                   Text('Tap to pick your fit',
                       style: TextStyle(color: AppColors.textMuted)),
                 ],
+              ),
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: TextField(
+              controller: _tagsController,
+              style: const TextStyle(color: AppColors.textPrimary),
+              decoration: const InputDecoration(
+                labelText: 'Tags (comma separated)',
+                hintText: 'streetwear, y2k, oversized',
+                labelStyle: TextStyle(color: AppColors.textSecondary),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: AppColors.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: AppColors.primary),
+                ),
               ),
             ),
           ),
