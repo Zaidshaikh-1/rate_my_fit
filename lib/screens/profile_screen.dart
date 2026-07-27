@@ -48,6 +48,9 @@ class ProfileScreen extends StatelessWidget {
             .snapshots(),
         builder: (context, snapshot) {
           final docs = snapshot.data?.docs ?? [];
+          if (snapshot.hasError) {
+            debugPrint('Profile query error: ${snapshot.error}');
+          }
 
           final postCount = docs.length;
           double avgScore = 0;
@@ -70,6 +73,19 @@ class ProfileScreen extends StatelessWidget {
                   avgScore: avgScore,
                 ),
               ),
+              if (snapshot.hasError)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center( child: Padding( padding: const EdgeInsets.all(24),
+                    child: Text( 'Error loading posts:\n${snapshot.error}',
+                      style: const TextStyle(color: Colors.redAccent,
+                          fontSize: 12),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  ),
+                )
+              else
               if (snapshot.connectionState == ConnectionState.waiting)
                 const SliverFillRemaining(
                   child: Center(child: CircularProgressIndicator()),
