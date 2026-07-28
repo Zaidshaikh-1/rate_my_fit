@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/fit_card.dart';
 import '../widgets/vibe_card_button.dart';
+import 'post_detail_screen.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -131,12 +133,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 stream: currentUserId == null
                     ? null
                     : doc.reference
-                    .collection('ratings')
-                    .doc(currentUserId)
-                    .snapshots(),
+                          .collection('ratings')
+                          .doc(currentUserId)
+                          .snapshots(),
                 builder: (context, ratingSnap) {
                   final myVibeName =
-                  ratingSnap.data?.data()?['vibe'] as String?;
+                      ratingSnap.data?.data()?['vibe'] as String?;
                   final hasRated = myVibeName != null;
                   final selected = hasRated
                       ? Vibe.values.firstWhere((v) => v.name == myVibeName)
@@ -144,13 +146,43 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   return Column(
                     children: [
-                      FitCard(
-                        username: data['username'] ?? 'Anonymous',
-                        timeAgo: _timeAgo(data['createdAt'] as Timestamp?),
-                        tags: List<String>.from(data['tags'] ?? []),
-                        avgScore: ((data['avgScore'] ?? 0) as num).toDouble(),
-                        ratingCount: (data['ratingCount'] ?? 0) as int,
-                        imageUrl: data['imageUrl'] as String?,
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  PostDetailScreen(postId: doc.id),
+                            ),
+                          );
+                        },
+                        child: FitCard(
+                          username: data['username'] ?? 'Anonymous',
+                          timeAgo: _timeAgo(data['createdAt'] as Timestamp?),
+                          tags: List<String>.from(data['tags'] ?? []),
+                          avgScore: ((data['avgScore'] ?? 0) as num).toDouble(),
+                          ratingCount: (data['ratingCount'] ?? 0) as int,
+                          imageUrl: data['imageUrl'] as String?,
+                          avatarUrl: data['avatarUrl'] as String?,
+                          outfitItems:
+                              (data['outfitItems'] as List<dynamic>?)
+                                  ?.map(
+                                    (e) => Map<String, dynamic>.from(e as Map),
+                                  )
+                                  .toList() ??
+                              [],
+                          onTapProfile: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ProfileScreen(
+                                  targetUserId: data['userId'],
+                                  targetUsername: data['username'],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),

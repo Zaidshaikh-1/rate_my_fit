@@ -54,6 +54,7 @@ dependencies:
   # State management — start simple, upgrade to Riverpod when ready
   provider: ^6.1.2
   google_sign_in: ^6.2.1
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:
