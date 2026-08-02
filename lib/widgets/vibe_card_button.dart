@@ -20,10 +20,10 @@ class VibeCard {
 }
 
 const vibeCards = [
-  VibeCard(vibe: Vibe.drip,  emoji: '', label: 'Drip',   color: AppColors.drip,  score: 100),
+  VibeCard(vibe: Vibe.drip,  emoji: '', label: 'Drip',   color: AppColors.notIt,  score: 100),
   VibeCard(vibe: Vibe.clean, emoji: '', label: 'Clean',  color: AppColors.clean, score: 75),
   VibeCard(vibe: Vibe.mid,   emoji: '', label: 'Mid',    color: AppColors.mid,   score: 40),
-  VibeCard(vibe: Vibe.notIt, emoji: '', label: 'Not it', color: AppColors.notIt, score: 10),
+  VibeCard(vibe: Vibe.notIt, emoji: '', label: 'Not it', color: AppColors.drip, score: 10),
 ];
 
 class VibeCardButton extends StatefulWidget {
