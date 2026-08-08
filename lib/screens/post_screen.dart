@@ -81,6 +81,7 @@ class _PostScreenState extends State<PostScreen> {
             .where((t) => t.isNotEmpty)
             .toList(),
         'outfitItems': _outfitItems,
+        'totalScore': 0,
         'avgScore': 0.0,
         'ratingCount': 0,
         'createdAt': FieldValue.serverTimestamp(),

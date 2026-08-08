@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
 import '../widgets/fit_card.dart';
 import '../widgets/vibe_card_button.dart';
+import '../widgets/vibe_reaction_overlay.dart';
 import 'profile_screen.dart';
 
 class PostDetailScreen extends StatefulWidget {
@@ -19,6 +20,8 @@ class PostDetailScreen extends StatefulWidget {
 
 class _PostDetailScreenState extends State<PostDetailScreen> {
   bool _isDeleting = false;
+  final GlobalKey<VibeReactionOverlayState> _overlayKey =
+      GlobalKey<VibeReactionOverlayState>();
 
   Future<void> _openUrl(String url) async {
     var uri = url;
@@ -43,6 +46,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   Future<void> _rate(Vibe vibe) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
+
+    // 🎬 Play the reaction animation immediately
+    _overlayKey.currentState?.playReaction(vibe);
 
     final vibeCard = vibeCards.firstWhere((c) => c.vibe == vibe);
     final postRef = FirebaseFirestore.instance
@@ -246,27 +252,36 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ──── Post card ────
-                      FitCard(
-                        username: username,
-                        timeAgo: _timeAgo(createdAt),
-                        tags: tags,
-                        avgScore: avgScore,
-                        ratingCount: ratingCount,
-                        imageUrl: imageUrl,
-                        avatarUrl: avatarUrl,
-                        outfitItems: outfitItems,
-                        onTapProfile: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ProfileScreen(
-                                targetUserId: data['userId'],
-                                targetUsername: data['username'],
-                              ),
-                            ),
-                          );
-                        },
+                      // ──── Post card with reaction overlay ────
+                      Stack(
+                        children: [
+                          FitCard(
+                            username: username,
+                            timeAgo: _timeAgo(createdAt),
+                            tags: tags,
+                            avgScore: avgScore,
+                            ratingCount: ratingCount,
+                            imageUrl: imageUrl,
+                            avatarUrl: avatarUrl,
+                            outfitItems: outfitItems,
+                            onTapProfile: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ProfileScreen(
+                                    targetUserId: data['userId'],
+                                    targetUsername: data['username'],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+
+                          // ── Reaction animation overlay ──
+                          Positioned.fill(
+                            child: VibeReactionOverlay(key: _overlayKey),
+                          ),
+                        ],
                       ),
 
                       const SizedBox(height: 4),

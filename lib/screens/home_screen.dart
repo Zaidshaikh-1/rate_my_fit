@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/fit_card.dart';
 import '../widgets/vibe_card_button.dart';
+import '../widgets/vibe_reaction_overlay.dart';
 import 'post_detail_screen.dart';
 import 'profile_screen.dart';
 
@@ -15,6 +16,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  /// Overlay keys mapped by post document ID
+  final Map<String, GlobalKey<VibeReactionOverlayState>> _overlayKeys = {};
   String _timeAgo(Timestamp? timestamp) {
     if (timestamp == null) return 'just now';
     final diff = DateTime.now().difference(timestamp.toDate());
@@ -24,9 +27,20 @@ class _HomeScreenState extends State<HomeScreen> {
     return '${diff.inDays}d ago';
   }
 
+  /// Get or create an overlay key for a particular post
+  GlobalKey<VibeReactionOverlayState> _overlayKeyFor(String postId) {
+    return _overlayKeys.putIfAbsent(
+      postId,
+      () => GlobalKey<VibeReactionOverlayState>(),
+    );
+  }
+
   Future<void> _rate(String postId, Vibe vibe) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
+
+    // 🎬 Play the reaction animation immediately
+    _overlayKeyFor(postId).currentState?.playReaction(vibe);
 
     final vibeCard = vibeCards.firstWhere((c) => c.vibe == vibe);
     final postRef = FirebaseFirestore.instance.collection('posts').doc(postId);
@@ -146,43 +160,60 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   return Column(
                     children: [
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  PostDetailScreen(postId: doc.id),
-                            ),
-                          );
-                        },
-                        child: FitCard(
-                          username: data['username'] ?? 'Anonymous',
-                          timeAgo: _timeAgo(data['createdAt'] as Timestamp?),
-                          tags: List<String>.from(data['tags'] ?? []),
-                          avgScore: ((data['avgScore'] ?? 0) as num).toDouble(),
-                          ratingCount: (data['ratingCount'] ?? 0) as int,
-                          imageUrl: data['imageUrl'] as String?,
-                          avatarUrl: data['avatarUrl'] as String?,
-                          outfitItems:
-                              (data['outfitItems'] as List<dynamic>?)
-                                  ?.map(
-                                    (e) => Map<String, dynamic>.from(e as Map),
-                                  )
-                                  .toList() ??
-                              [],
-                          onTapProfile: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ProfileScreen(
-                                  targetUserId: data['userId'],
-                                  targetUsername: data['username'],
+                      // Wrap the FitCard in a Stack so the reaction overlay
+                      // appears on top of the image
+                      Stack(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      PostDetailScreen(postId: doc.id),
                                 ),
+                              );
+                            },
+                            child: FitCard(
+                              username: data['username'] ?? 'Anonymous',
+                              timeAgo: _timeAgo(
+                                data['createdAt'] as Timestamp?,
                               ),
-                            );
-                          },
-                        ),
+                              tags: List<String>.from(data['tags'] ?? []),
+                              avgScore: ((data['avgScore'] ?? 0) as num)
+                                  .toDouble(),
+                              ratingCount: (data['ratingCount'] ?? 0) as int,
+                              imageUrl: data['imageUrl'] as String?,
+                              avatarUrl: data['avatarUrl'] as String?,
+                              outfitItems:
+                                  (data['outfitItems'] as List<dynamic>?)
+                                      ?.map(
+                                        (e) =>
+                                            Map<String, dynamic>.from(e as Map),
+                                      )
+                                      .toList() ??
+                                  [],
+                              onTapProfile: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ProfileScreen(
+                                      targetUserId: data['userId'],
+                                      targetUsername: data['username'],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+
+                          // ── Reaction animation overlay ──
+                          Positioned.fill(
+                            child: VibeReactionOverlay(
+                              key: _overlayKeyFor(doc.id),
+                            ),
+                          ),
+                        ],
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
