@@ -24,7 +24,7 @@ final _reactionConfigs = {
     icon: Icons.local_fire_department_rounded,
     label: 'DRIP',
     glowColor: AppColors.drip,
-    accentColor: const Color(0xFFFF8A50),
+    accentColor: const Color(0xFF8358E3),
   ),
   Vibe.clean: _VibeReactionConfig(
     icon: Icons.auto_awesome_rounded,

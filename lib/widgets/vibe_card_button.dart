@@ -24,7 +24,7 @@ const vibeCards = [
     vibe: Vibe.drip,
     emoji: '',
     label: 'Drip',
-    color: AppColors.notIt,
+    color: AppColors.drip,
     score: 100,
   ),
   VibeCard(
@@ -45,7 +45,7 @@ const vibeCards = [
     vibe: Vibe.notIt,
     emoji: '',
     label: 'Not it',
-    color: AppColors.drip,
+    color: AppColors.notIt,
     score: 10,
   ),
 ];

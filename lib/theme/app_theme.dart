@@ -16,7 +16,7 @@ class AppColors {
   static const textMuted = Color(0xFF5A5A66);
 
   // Vibe card colours
-  static const drip = Color(0xFFFF4D4D); // 🔥
+  static const drip = Color(0xFF8558EA); // 🔥
   static const clean = Color(0xFF4DFFB4); // 😎
   static const mid = Color(0xFFFFAA00); // 😐
   static const notIt = Color(0xFF7B7B7B); // 💀
