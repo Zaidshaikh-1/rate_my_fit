@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
@@ -39,20 +40,6 @@ class _FitCardState extends State<FitCard> {
     super.dispose();
   }
 
-  String get _scoreLabel {
-    if (widget.avgScore >= 85) return 'Drip';
-    if (widget.avgScore >= 65) return 'Clean';
-    if (widget.avgScore >= 30) return 'Mid';
-    return 'Not it';
-  }
-
-  Color get _scoreColor {
-    if (widget.avgScore >= 85) return AppColors.drip;
-    if (widget.avgScore >= 65) return AppColors.clean;
-    if (widget.avgScore >= 30) return AppColors.mid;
-    return AppColors.notIt;
-  }
-
   Future<void> _openUrl(String url) async {
     var uri = url;
     if (!uri.startsWith('http://') && !uri.startsWith('https://')) {
@@ -70,189 +57,166 @@ class _FitCardState extends State<FitCard> {
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
-      ),
-      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
-            child: Row(
-              children: [
-                // Avatar + Name clickable area
-                GestureDetector(
-                  onTap: widget.onTapProfile,
-                  behavior: HitTestBehavior.opaque,
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.border,
-                          image: widget.avatarUrl != null
-                              ? DecorationImage(
-                                  image: NetworkImage(widget.avatarUrl!),
-                                  fit: BoxFit.cover,
-                                )
-                              : null,
-                        ),
-                        child: widget.avatarUrl == null
-                            ? const Icon(
-                                Icons.person,
-                                size: 20,
-                                color: AppColors.textMuted,
-                              )
-                            : null,
-                      ),
-                      const SizedBox(width: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.username,
-                            style: Theme.of(
-                              context,
-                            ).textTheme.titleMedium?.copyWith(fontSize: 14),
-                          ),
-                          Text(
-                            widget.timeAgo,
-                            style: Theme.of(context).textTheme.labelSmall,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const Spacer(),
-                // Score badge
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _scoreColor.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: _scoreColor.withOpacity(0.4)),
-                  ),
-                  child: Text(
-                    _scoreLabel,
-                    style: TextStyle(
-                      fontFamily: 'Syne',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: _scoreColor,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // ──── Swipeable image area ────
-          AspectRatio(
-            aspectRatio: 4 / 5,
-            child: hasOutfitItems
-                ? PageView(
-                    controller: _pageController,
-                    physics: const BouncingScrollPhysics(),
-                    children: [
-                      // Page 1: The Image
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 14),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(14),
-                          color: AppColors.border,
-                          image: widget.imageUrl != null
-                              ? DecorationImage(
-                                  image: NetworkImage(widget.imageUrl!),
-                                  fit: BoxFit.cover,
-                                )
-                              : null,
-                        ),
-                        child: Stack(
-                          children: [
-                            if (widget.imageUrl == null)
-                              const Center(
-                                child: Icon(
-                                  Icons.photo_size_select_actual_outlined,
-                                  size: 48,
-                                  color: AppColors.textMuted,
-                                ),
-                              ),
-                            // ── Swipe hint badge ──
-                            Positioned(
-                              bottom: 12,
-                              right:
-                                  12, // moved to right to indicate swiping left goes to next page
-                              child: _SwipeHintBadge(),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Page 2: Outfit Details Panel
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 14),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(14),
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              Color(0xFF1A1A2E),
-                              Color(0xFF16213E),
-                              Color(0xFF0F3460),
-                            ],
-                          ),
-                        ),
-                        child: _OutfitInfoPanel(
-                          items: widget.outfitItems,
-                          onOpenUrl: _openUrl,
-                          onClose: () {
-                            _pageController.previousPage(
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeOut,
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  )
-                : Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 14),
+            padding: const EdgeInsets.fromLTRB(2, 0, 2, 10),
+            child: GestureDetector(
+              onTap: widget.onTapProfile,
+              behavior: HitTestBehavior.opaque,
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(14),
-                      color: AppColors.border,
-                      image: widget.imageUrl != null
+                      shape: BoxShape.circle,
+                      color: AppColors.surfaceCard,
+                      image: widget.avatarUrl != null
                           ? DecorationImage(
-                              image: NetworkImage(widget.imageUrl!),
+                              image: CachedNetworkImageProvider(widget.avatarUrl!),
                               fit: BoxFit.cover,
                             )
                           : null,
                     ),
-                    child: widget.imageUrl == null
-                        ? const Center(
-                            child: Icon(
-                              Icons.photo_size_select_actual_outlined,
-                              size: 48,
-                              color: AppColors.textMuted,
-                            ),
+                    child: widget.avatarUrl == null
+                        ? const Icon(
+                            Icons.person,
+                            size: 20,
+                            color: AppColors.textMuted,
                           )
                         : null,
                   ),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.username,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.titleMedium?.copyWith(fontSize: 14),
+                      ),
+                      Text(
+                        widget.timeAgo,
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // ──── Swipeable image area — single radius, edge to edge ────
+          ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: AspectRatio(
+              aspectRatio: 4 / 5,
+              child: hasOutfitItems
+                  ? PageView(
+                      controller: _pageController,
+                      physics: const BouncingScrollPhysics(),
+                      children: [
+                        // Page 1: The Image
+                        Container(
+                          color: AppColors.surfaceCard,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              if (widget.imageUrl != null)
+                                CachedNetworkImage(
+                                  imageUrl: widget.imageUrl!,
+                                  fit: BoxFit.cover,
+                                  fadeInDuration: const Duration(milliseconds: 200),
+                                  placeholder: (_, __) =>
+                                      Container(color: AppColors.surfaceCard),
+                                  errorWidget: (_, __, ___) => const Center(
+                                    child: Icon(
+                                      Icons.broken_image_outlined,
+                                      size: 40,
+                                      color: AppColors.textMuted,
+                                    ),
+                                  ),
+                                )
+                              else
+                                const Center(
+                                  child: Icon(
+                                    Icons.photo_size_select_actual_outlined,
+                                    size: 48,
+                                    color: AppColors.textMuted,
+                                  ),
+                                ),
+                              // ── Swipe hint badge ──
+                              Positioned(
+                                bottom: 12,
+                                right: 12,
+                                child: _SwipeHintBadge(),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Page 2: Outfit Details Panel
+                        Container(
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                AppColors.surface,
+                                AppColors.surfaceCard,
+                              ],
+                            ),
+                          ),
+                          child: _OutfitInfoPanel(
+                            items: widget.outfitItems,
+                            onOpenUrl: _openUrl,
+                            onClose: () {
+                              _pageController.previousPage(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOut,
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    )
+                  : Container(
+                      color: AppColors.surfaceCard,
+                      child: widget.imageUrl != null
+                          ? CachedNetworkImage(
+                              imageUrl: widget.imageUrl!,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                              fadeInDuration: const Duration(milliseconds: 200),
+                              placeholder: (_, __) =>
+                                  Container(color: AppColors.surfaceCard),
+                              errorWidget: (_, __, ___) => const Center(
+                                child: Icon(
+                                  Icons.broken_image_outlined,
+                                  size: 40,
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
+                            )
+                          : const Center(
+                              child: Icon(
+                                Icons.photo_size_select_actual_outlined,
+                                size: 48,
+                                color: AppColors.textMuted,
+                              ),
+                            ),
+                    ),
+            ),
           ),
 
           // Tags + rating count
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+            padding: const EdgeInsets.fromLTRB(2, 10, 2, 0),
             child: Row(
               children: [
                 Expanded(
@@ -317,7 +281,7 @@ class _OutfitInfoPanel extends StatelessWidget {
                   color: AppColors.primary.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.checkroom_rounded,
                   size: 18,
                   color: AppColors.primary,
@@ -354,7 +318,7 @@ class _OutfitInfoPanel extends StatelessWidget {
           ),
 
           const SizedBox(height: 6),
-          Text(
+          const Text(
             'Swipe left to go back',
             style: TextStyle(fontSize: 11, color: AppColors.textMuted),
           ),
@@ -399,7 +363,7 @@ class _OutfitInfoPanel extends StatelessWidget {
                             ),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Center(
+                          child: const Center(
                             child: Icon(
                               Icons.shopping_bag_outlined,
                               size: 18,
@@ -426,7 +390,7 @@ class _OutfitInfoPanel extends StatelessWidget {
                                 const SizedBox(height: 2),
                                 Text(
                                   url,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 11,
                                     color: AppColors.primary,
                                   ),
@@ -438,7 +402,7 @@ class _OutfitInfoPanel extends StatelessWidget {
                           ),
                         ),
                         if (hasUrl)
-                          Icon(
+                          const Icon(
                             Icons.open_in_new_rounded,
                             size: 16,
                             color: AppColors.primary,
@@ -501,7 +465,7 @@ class _SwipeHintBadgeState extends State<_SwipeHintBadge>
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.swipe_right_rounded, size: 14, color: AppColors.primary),
+            const Icon(Icons.swipe_right_rounded, size: 14, color: AppColors.primary),
             const SizedBox(width: 5),
             Text(
               'Swipe for outfit',
@@ -530,7 +494,7 @@ class _TagChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.border,
+        color: AppColors.surfaceCard,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(

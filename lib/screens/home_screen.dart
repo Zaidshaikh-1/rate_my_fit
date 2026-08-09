@@ -121,6 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
         stream: FirebaseFirestore.instance
             .collection('posts')
             .orderBy('createdAt', descending: true)
+            .limit(15)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {

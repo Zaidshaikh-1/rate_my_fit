@@ -25,7 +25,10 @@ class _PostScreenState extends State<PostScreen> {
   final TextEditingController _itemLinkController = TextEditingController();
 
   Future<void> _pickImage() async {
-    final XFile? picked = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? picked = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 75,
+    );
     if (picked != null) {
       setState(() => _selectedImage = File(picked.path));
     }

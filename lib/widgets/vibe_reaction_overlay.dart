@@ -24,25 +24,25 @@ final _reactionConfigs = {
     icon: Icons.local_fire_department_rounded,
     label: 'DRIP',
     glowColor: AppColors.drip,
-    accentColor: const Color(0xFF8358E3),
+    accentColor: const Color(0xFFFFE040),
   ),
   Vibe.clean: _VibeReactionConfig(
     icon: Icons.auto_awesome_rounded,
     label: 'CLEAN',
     glowColor: AppColors.clean,
-    accentColor: const Color(0xFF80FFD4),
+    accentColor: const Color(0xFFE3C15C),
   ),
   Vibe.mid: _VibeReactionConfig(
     icon: Icons.sentiment_neutral_rounded,
     label: 'MID',
     glowColor: AppColors.mid,
-    accentColor: const Color(0xFFFFCC44),
+    accentColor: const Color(0xFFA89A6B),
   ),
   Vibe.notIt: _VibeReactionConfig(
     icon: Icons.heart_broken_rounded,
     label: 'NOT IT',
     glowColor: AppColors.notIt,
-    accentColor: const Color(0xFF9E9E9E),
+    accentColor: const Color(0xFF6B6B6B),
   ),
 };
 

@@ -16,10 +16,10 @@ class AppColors {
   static const textMuted = Color(0xFF5A5A66);
 
   // Vibe card colours
-  static const drip = Color(0xFF8558EA); // 🔥
-  static const clean = Color(0xFF4DFFB4); // 😎
-  static const mid = Color(0xFFFFAA00); // 😐
-  static const notIt = Color(0xFF7B7B7B); // 💀
+  static const drip = Color(0xFFFFE040); // 🔥
+  static const clean = Color(0xFFE3C15C); // 😎
+  static const mid = Color(0xFFA89A6B); // 😐
+  static const notIt = Color(0xFF6B6B6B); // 💀
 }
 
 class AppTheme {
