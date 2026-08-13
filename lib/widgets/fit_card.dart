@@ -1,9 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../theme/app_theme.dart';
+import 'fit_share_preview.dart';
 
 class FitCard extends StatefulWidget {
+  final String postId;
   final String username;
   final String? avatarUrl;
   final String? imageUrl;
@@ -16,6 +20,7 @@ class FitCard extends StatefulWidget {
 
   const FitCard({
     super.key,
+    required this.postId,
     required this.username,
     required this.timeAgo,
     required this.tags,
@@ -33,6 +38,7 @@ class FitCard extends StatefulWidget {
 
 class _FitCardState extends State<FitCard> {
   final PageController _pageController = PageController();
+  late final String? _currentUserId = FirebaseAuth.instance.currentUser?.uid;
 
   @override
   void dispose() {
@@ -63,50 +69,133 @@ class _FitCardState extends State<FitCard> {
           // Header
           Padding(
             padding: const EdgeInsets.fromLTRB(2, 0, 2, 10),
-            child: GestureDetector(
-              onTap: widget.onTapProfile,
-              behavior: HitTestBehavior.opaque,
-              child: Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.surfaceCard,
-                      image: widget.avatarUrl != null
-                          ? DecorationImage(
-                              image: CachedNetworkImageProvider(widget.avatarUrl!),
-                              fit: BoxFit.cover,
-                            )
-                          : null,
-                    ),
-                    child: widget.avatarUrl == null
-                        ? const Icon(
-                            Icons.person,
-                            size: 20,
-                            color: AppColors.textMuted,
-                          )
-                        : null,
-                  ),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                GestureDetector(
+                  onTap: widget.onTapProfile,
+                  behavior: HitTestBehavior.opaque,
+                  child: Row(
                     children: [
-                      Text(
-                        widget.username,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.titleMedium?.copyWith(fontSize: 14),
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.surfaceCard,
+                          image: widget.avatarUrl != null
+                              ? DecorationImage(
+                                  image: CachedNetworkImageProvider(
+                                    widget.avatarUrl!,
+                                  ),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
+                        ),
+                        child: widget.avatarUrl == null
+                            ? const Icon(
+                                Icons.person,
+                                size: 20,
+                                color: AppColors.textMuted,
+                              )
+                            : null,
                       ),
-                      Text(
-                        widget.timeAgo,
-                        style: Theme.of(context).textTheme.labelSmall,
+                      const SizedBox(width: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.username,
+                            style: Theme.of(
+                              context,
+                            ).textTheme.titleMedium?.copyWith(fontSize: 14),
+                          ),
+                          Text(
+                            widget.timeAgo,
+                            style: Theme.of(context).textTheme.labelSmall,
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+                Row(
+                  children: [
+                    StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                      stream: _currentUserId == null
+                          ? null
+                          : FirebaseFirestore.instance
+                                .collection('saved_posts')
+                                .doc('${_currentUserId}_${widget.postId}')
+                                .snapshots(),
+                      builder: (context, savedSnap) {
+                        final isSaved = savedSnap.data?.exists ?? false;
+
+                        return IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: Icon(
+                            isSaved
+                                ? Icons.bookmark_rounded
+                                : Icons.bookmark_border_rounded,
+                            size: 20,
+                            color: isSaved
+                                ? AppColors.primary
+                                : AppColors.textSecondary,
+                          ),
+                          onPressed: () async {
+                            if (_currentUserId == null) return;
+                            final saveRef = FirebaseFirestore.instance
+                                .collection('saved_posts')
+                                .doc('${_currentUserId}_${widget.postId}');
+                            final postRef = FirebaseFirestore.instance
+                                .collection('posts')
+                                .doc(widget.postId);
+
+                            if (isSaved) {
+                              // Unsave
+                              await saveRef.delete();
+                              await postRef.update({
+                                'saveCount': FieldValue.increment(-1),
+                              });
+                            } else {
+                              // Save
+                              await saveRef.set({
+                                'userId': _currentUserId,
+                                'postId': widget.postId,
+                                'savedAt': FieldValue.serverTimestamp(),
+                              });
+                              await postRef.update({
+                                'saveCount': FieldValue.increment(1),
+                              });
+                            }
+                          },
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 14),
+                    IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      icon: const Icon(
+                        Icons.share_outlined,
+                        size: 20,
+                        color: AppColors.textSecondary,
+                      ),
+                      onPressed: () {
+                        showFitShareSheet(
+                          context,
+                          username: widget.username,
+                          avgScore: widget.avgScore,
+                          ratingCount: widget.ratingCount,
+                          tags: widget.tags,
+                          imageUrl: widget.imageUrl,
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
 
@@ -130,7 +219,9 @@ class _FitCardState extends State<FitCard> {
                                 CachedNetworkImage(
                                   imageUrl: widget.imageUrl!,
                                   fit: BoxFit.cover,
-                                  fadeInDuration: const Duration(milliseconds: 200),
+                                  fadeInDuration: const Duration(
+                                    milliseconds: 200,
+                                  ),
                                   placeholder: (_, __) =>
                                       Container(color: AppColors.surfaceCard),
                                   errorWidget: (_, __, ___) => const Center(
@@ -228,9 +319,20 @@ class _FitCardState extends State<FitCard> {
                         .toList(),
                   ),
                 ),
-                Text(
-                  '${widget.ratingCount} ratings',
-                  style: Theme.of(context).textTheme.labelSmall,
+                StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                  stream: FirebaseFirestore.instance
+                      .collection('posts')
+                      .doc(widget.postId)
+                      .snapshots(),
+                  builder: (context, postSnap) {
+                    final data = postSnap.data?.data();
+                    final saveCount = (data?['saveCount'] ?? 0) as int;
+
+                    return Text(
+                      '${widget.ratingCount} ratings • $saveCount inspos',
+                      style: Theme.of(context).textTheme.labelSmall,
+                    );
+                  },
                 ),
               ],
             ),
@@ -465,7 +567,11 @@ class _SwipeHintBadgeState extends State<_SwipeHintBadge>
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.swipe_right_rounded, size: 14, color: AppColors.primary),
+            const Icon(
+              Icons.swipe_right_rounded,
+              size: 14,
+              color: AppColors.primary,
+            ),
             const SizedBox(width: 5),
             Text(
               'Swipe for outfit',

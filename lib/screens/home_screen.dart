@@ -176,6 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               );
                             },
                             child: FitCard(
+                              postId: doc.id,
                               username: data['username'] ?? 'Anonymous',
                               timeAgo: _timeAgo(
                                 data['createdAt'] as Timestamp?,

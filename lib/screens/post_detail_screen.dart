@@ -256,6 +256,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       Stack(
                         children: [
                           FitCard(
+                            postId: widget.postId,
                             username: username,
                             timeAgo: _timeAgo(createdAt),
                             tags: tags,

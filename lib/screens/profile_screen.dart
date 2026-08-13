@@ -19,6 +19,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _useSimpleQuery = false;
+  int _activeTab = 0; // 0 = Posts, 1 = Inspos
 
   Future<void> _signOut(BuildContext context) async {
     await GoogleSignIn().signOut();
@@ -35,15 +36,77 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final collection = FirebaseFirestore.instance.collection('posts');
 
     if (_useSimpleQuery) {
-      // Fallback: no orderBy, avoids needing a composite index
       return collection.where('userId', isEqualTo: uid).snapshots();
     }
 
-    // Primary: requires composite index (userId ASC, createdAt DESC)
     return collection
         .where('userId', isEqualTo: uid)
         .orderBy('createdAt', descending: true)
         .snapshots();
+  }
+
+  Widget _buildSavedGrid(
+    BuildContext context,
+    AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> savedSnap,
+  ) {
+    if (savedSnap.connectionState == ConnectionState.waiting) {
+      return const SliverFillRemaining(
+        child: Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
+    }
+
+    final docs = savedSnap.data?.docs ?? [];
+    if (docs.isEmpty) {
+      return const SliverFillRemaining(
+        hasScrollBody: false,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.bookmark_border_rounded,
+                size: 40,
+                color: AppColors.textMuted,
+              ),
+              SizedBox(height: 8),
+              Text(
+                'No inspos saved yet',
+                style: TextStyle(color: AppColors.textMuted),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return SliverPadding(
+      padding: const EdgeInsets.all(12),
+      sliver: SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+          childAspectRatio: 0.8,
+        ),
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final doc = docs[index];
+          final postId = doc.data()['postId'] as String;
+          return _SavedPostThumbnail(
+            postId: postId,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PostDetailScreen(postId: postId),
+                ),
+              );
+            },
+          );
+        }, childCount: docs.length),
+      ),
+    );
   }
 
   @override
@@ -155,6 +218,85 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   },
                 ),
               ),
+
+              // ── Tab Segmented Toggler (Posts vs Inspos) ──
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceCard,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: AppColors.border.withOpacity(0.5),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _activeTab = 0),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: _activeTab == 0
+                                    ? AppColors.primary
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                'Posts',
+                                style: TextStyle(
+                                  fontFamily: 'Syne',
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 13,
+                                  color: _activeTab == 0
+                                      ? Colors.black
+                                      : AppColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _activeTab = 1),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: _activeTab == 1
+                                    ? AppColors.primary
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                'Inspos',
+                                style: TextStyle(
+                                  fontFamily: 'Syne',
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 13,
+                                  color: _activeTab == 1
+                                      ? Colors.black
+                                      : AppColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
               if (snapshot.hasError)
                 SliverFillRemaining(
                   hasScrollBody: false,
@@ -175,6 +317,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
               else if (snapshot.connectionState == ConnectionState.waiting)
                 const SliverFillRemaining(
                   child: Center(child: CircularProgressIndicator()),
+                )
+              else if (_activeTab == 1)
+                StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  stream: FirebaseFirestore.instance
+                      .collection('saved_posts')
+                      .where('userId', isEqualTo: viewUid)
+                      .orderBy('savedAt', descending: true)
+                      .snapshots(),
+                  builder: (context, savedSnap) {
+                    if (savedSnap.hasError) {
+                      return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                        stream: FirebaseFirestore.instance
+                            .collection('saved_posts')
+                            .where('userId', isEqualTo: viewUid)
+                            .snapshots(),
+                        builder: (context, fallbackSnap) {
+                          return _buildSavedGrid(context, fallbackSnap);
+                        },
+                      );
+                    }
+                    return _buildSavedGrid(context, savedSnap);
+                  },
                 )
               else if (docs.isEmpty)
                 const SliverFillRemaining(
@@ -416,6 +580,54 @@ class _PostThumbnailState extends State<_PostThumbnail>
           ),
         ),
       ),
+    );
+  }
+}
+
+// ── Inspo / Saved Post Thumbnail widget ──
+class _SavedPostThumbnail extends StatelessWidget {
+  final String postId;
+  final VoidCallback onTap;
+
+  const _SavedPostThumbnail({required this.postId, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('posts')
+          .doc(postId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || !snapshot.data!.exists) {
+          return Container(
+            decoration: BoxDecoration(
+              color: AppColors.surfaceCard,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Center(
+              child: SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  color: AppColors.primary,
+                  strokeWidth: 1.5,
+                ),
+              ),
+            ),
+          );
+        }
+
+        final data = snapshot.data!.data()!;
+        final imageUrl = data['imageUrl'] as String?;
+        final avgScore = ((data['avgScore'] ?? 0) as num).toDouble();
+
+        return _PostThumbnail(
+          imageUrl: imageUrl,
+          avgScore: avgScore,
+          onTap: onTap,
+        );
+      },
     );
   }
 }
