@@ -31,6 +31,29 @@ class FitSharePreviewSheet extends StatefulWidget {
 class _FitSharePreviewSheetState extends State<FitSharePreviewSheet> {
   final GlobalKey _boundaryKey = GlobalKey();
   bool _isSharing = false;
+  bool _imageReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _precacheImage();
+  }
+
+  Future<void> _precacheImage() async {
+    if (widget.imageUrl != null) {
+      try {
+        await precacheImage(
+          CachedNetworkImageProvider(widget.imageUrl!),
+          context,
+        );
+      } catch (_) {
+        // Image may fail to load — continue anyway
+      }
+    }
+    if (mounted) {
+      setState(() => _imageReady = true);
+    }
+  }
 
   Future<void> _shareImage(String shareText) async {
     if (_isSharing) return;
@@ -40,18 +63,16 @@ class _FitSharePreviewSheetState extends State<FitSharePreviewSheet> {
     });
 
     try {
+      // Give the render tree time to settle with the loaded image
+      await Future.delayed(const Duration(milliseconds: 500));
+
       // Find boundary render object
       final RenderRepaintBoundary? boundary =
           _boundaryKey.currentContext?.findRenderObject()
               as RenderRepaintBoundary?;
 
       if (boundary == null) {
-        throw Exception('RepaintBoundary context not ready.');
-      }
-
-      // Check if image is still loading or if rendering tree needs to lay out
-      if (boundary.debugNeedsLayout) {
-        await Future.delayed(const Duration(milliseconds: 150));
+        throw Exception('Share preview not ready. Please try again.');
       }
 
       // Capture widget image at high resolution (3.0 ratio = crisp on retina/high-res screens)
@@ -73,13 +94,13 @@ class _FitSharePreviewSheetState extends State<FitSharePreviewSheet> {
       final File file = await File(filePath).create();
       await file.writeAsBytes(pngBytes);
 
-      // Launch share sheet (which natively links to Instagram Stories, DMs, feed, etc.)
+      // Launch native share sheet (includes Instagram Stories, DMs, etc.)
       await Share.shareXFiles([XFile(file.path)], text: shareText);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to share to Instagram: $e'),
+            content: Text('Failed to share: $e'),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -176,7 +197,7 @@ class _FitSharePreviewSheetState extends State<FitSharePreviewSheet> {
                       Color(0xFFFCAF45),
                     ],
                   ),
-                  isLoading: _isSharing,
+                  isLoading: _isSharing || !_imageReady,
                   onTap: () => _shareImage(
                     'Rate my fit! Average score: ${widget.ratingCount > 0 ? widget.avgScore.toStringAsFixed(1) : "—"}/10! ⚡',
                   ),
@@ -191,7 +212,7 @@ class _FitSharePreviewSheetState extends State<FitSharePreviewSheet> {
                   backgroundColor: AppColors.surfaceCard,
                   borderColor: AppColors.border,
                   iconColor: AppColors.primary,
-                  isLoading: _isSharing,
+                  isLoading: _isSharing || !_imageReady,
                   onTap: () => _shareImage(
                     'Check my fit score! Vibe check status is ${widget.ratingCount > 0 ? widget.avgScore.toStringAsFixed(1) : "—"}/10! 🔥',
                   ),
@@ -370,20 +391,11 @@ class _FitSharePreviewSheetState extends State<FitSharePreviewSheet> {
                     ),
                   ),
                 ),
-
                 const Spacer(flex: 2),
 
-                // Stats Overlay Footer Info Card
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceCard.withOpacity(0.85),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withOpacity(0.08)),
-                  ),
+                // Floating Stats Info
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: Row(
                     children: [
                       // User detail
@@ -392,12 +404,12 @@ class _FitSharePreviewSheetState extends State<FitSharePreviewSheet> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Outfit by ${widget.username}',
+                              widget.username,
                               style: const TextStyle(
                                 fontFamily: 'Syne',
-                                fontSize: 15,
+                                fontSize: 16,
                                 fontWeight: FontWeight.w800,
-                                color: AppColors.textPrimary,
+                                color: Colors.white,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -407,21 +419,21 @@ class _FitSharePreviewSheetState extends State<FitSharePreviewSheet> {
                               children: [
                                 const Icon(
                                   Icons.how_to_vote_outlined,
-                                  size: 11,
-                                  color: AppColors.textSecondary,
+                                  size: 12,
+                                  color: Colors.white70,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   '${widget.ratingCount} reviews',
                                   style: const TextStyle(
-                                    fontSize: 10,
-                                    color: AppColors.textSecondary,
+                                    fontSize: 11,
+                                    color: Colors.white70,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 8),
                             if (widget.tags.isNotEmpty)
                               SingleChildScrollView(
                                 scrollDirection: Axis.horizontal,
@@ -430,18 +442,18 @@ class _FitSharePreviewSheetState extends State<FitSharePreviewSheet> {
                                     return Container(
                                       margin: const EdgeInsets.only(right: 6),
                                       padding: const EdgeInsets.symmetric(
-                                        horizontal: 6,
-                                        vertical: 3,
+                                        horizontal: 8,
+                                        vertical: 4,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.08),
-                                        borderRadius: BorderRadius.circular(6),
+                                        color: Colors.white.withAlpha(25),
+                                        borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Text(
                                         '#$tag',
                                         style: const TextStyle(
-                                          fontSize: 9,
-                                          color: AppColors.textSecondary,
+                                          fontSize: 10,
+                                          color: Colors.white,
                                           fontWeight: FontWeight.w700,
                                         ),
                                       ),
@@ -455,59 +467,43 @@ class _FitSharePreviewSheetState extends State<FitSharePreviewSheet> {
 
                       const SizedBox(width: 12),
 
-                      // Vibe metric badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withOpacity(0.3),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
+                      // Vibe metric text
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            widget.ratingCount > 0
+                                ? widget.avgScore.toStringAsFixed(1)
+                                : '—',
+                            style: const TextStyle(
+                              fontFamily: 'Syne',
+                              fontSize: 32,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.primary,
                             ),
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              widget.ratingCount > 0
-                                  ? widget.avgScore.toStringAsFixed(1)
-                                  : '—',
-                              style: const TextStyle(
-                                fontFamily: 'Syne',
-                                fontSize: 18,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.black,
-                              ),
+                          ),
+                          Text(
+                            'AVG SCORE',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white.withAlpha(150),
+                              letterSpacing: 1.0,
                             ),
-                            Text(
-                              'AVG VIBE',
-                              style: TextStyle(
-                                fontSize: 8,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.black.withOpacity(0.6),
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
 
-                const Spacer(flex: 3),
+                const Spacer(flex: 2),
 
                 // Joining detail text
                 const Center(
                   child: Text(
-                    'JOIN THE VIBE CHECK • DOWNLOAD RATE MY FIT',
+                    '•DOWNLOAD RATE MY FIT',
                     style: TextStyle(
                       fontSize: 8,
                       fontWeight: FontWeight.w900,

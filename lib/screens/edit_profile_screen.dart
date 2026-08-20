@@ -46,7 +46,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             FirebaseAuth.instance.currentUser?.displayName
                 ?.replaceAll(' ', '')
                 .toLowerCase() ??
-                '';
+            '';
       });
     }
   }
@@ -163,15 +163,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     backgroundImage: _selectedImage != null
                         ? FileImage(_selectedImage!)
                         : (_currentAvatarUrl != null
-                        ? NetworkImage(_currentAvatarUrl!)
-                        : null)
-                    as ImageProvider?,
+                                  ? NetworkImage(_currentAvatarUrl!)
+                                  : null)
+                              as ImageProvider?,
                     child: _selectedImage == null && _currentAvatarUrl == null
                         ? const Icon(
-                      Icons.person,
-                      size: 40,
-                      color: AppColors.textMuted,
-                    )
+                            Icons.person,
+                            size: 40,
+                            color: AppColors.textMuted,
+                          )
                         : null,
                   ),
                   Container(
@@ -223,21 +223,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
                 child: _isLoading
                     ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    color: Colors.black,
-                    strokeWidth: 2,
-                  ),
-                )
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.black,
+                          strokeWidth: 2,
+                        ),
+                      )
                     : const Text(
-                  'Save Profile',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
-                  ),
-                ),
+                        'Save Profile',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
+                      ),
               ),
             ),
           ],

@@ -18,10 +18,9 @@ class _PlaceholderScreen extends StatelessWidget {
         children: [
           Text(
             label,
-            style: Theme.of(context)
-                .textTheme
-                .headlineMedium
-                ?.copyWith(color: AppColors.textMuted),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(color: AppColors.textMuted),
           ),
           const SizedBox(height: 8),
           Text(
@@ -56,10 +55,7 @@ class _ShellScreenState extends State<ShellScreen> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
-        body: IndexedStack(
-          index: _currentIndex,
-          children: _screens,
-        ),
+        body: IndexedStack(index: _currentIndex, children: _screens),
         bottomNavigationBar: Container(
           decoration: const BoxDecoration(
             border: Border(top: BorderSide(color: AppColors.border)),
@@ -70,7 +66,7 @@ class _ShellScreenState extends State<ShellScreen> {
               if (i == 2) {
                 Navigator.push(
                   context,
-                    MaterialPageRoute(builder: (_) => const PostScreen()),
+                  MaterialPageRoute(builder: (_) => const PostScreen()),
                 );
               } else {
                 setState(() => _currentIndex = i);
